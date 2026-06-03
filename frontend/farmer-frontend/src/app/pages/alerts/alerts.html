@@ -1,0 +1,183 @@
+<div class="min-h-screen bg-gray-100">
+
+  <!-- Navigation Bar -->
+  <nav class="bg-green-700 text-white px-6 py-4 flex justify-between items-center">
+    <div class="text-xl font-bold">🌾 FarmPrice</div>
+  </nav>
+
+  <!-- Nav Links -->
+  <div class="bg-green-600 px-6 py-2 flex gap-4 overflow-x-auto">
+    <a routerLink="/dashboard"
+      class="text-green-200 text-sm font-medium px-3 py-1 rounded hover:text-white">
+      Dashboard
+    </a>
+    <a routerLink="/search"
+      class="text-green-200 text-sm font-medium px-3 py-1 rounded hover:text-white">
+      Search
+    </a>
+    <a routerLink="/compare"
+      class="text-green-200 text-sm font-medium px-3 py-1 rounded hover:text-white">
+      Compare
+    </a>
+    <a routerLink="/alerts"
+      class="text-white text-sm font-medium px-3 py-1 rounded bg-green-800">
+      Alerts
+    </a>
+    <a routerLink="/profile"
+      class="text-green-200 text-sm font-medium px-3 py-1 rounded hover:text-white">
+      Profile
+    </a>
+  </div>
+
+  <div class="p-6 max-w-5xl mx-auto">
+
+    <!-- Page Title -->
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">
+      🔔 Price Alerts
+    </h1>
+
+    <!-- Create Alert Form -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">
+        Set New Alert
+      </h2>
+
+      <!-- Success Message -->
+      @if (successMessage) {
+        <div class="bg-green-100 text-green-700 px-4 py-3 rounded-lg mb-4">
+          ✅ {{ successMessage }}
+        </div>
+      }
+
+      <!-- Error Message -->
+      @if (errorMessage) {
+        <div class="bg-red-100 text-red-700 px-4 py-3 rounded-lg mb-4">
+          {{ errorMessage }}
+        </div>
+      }
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <!-- Crop Input -->
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">
+            Crop Name
+          </label>
+          <input
+            type="text"
+            [(ngModel)]="crop"
+            placeholder="e.g. Banana"
+            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500"
+          />
+          <!-- Popular crops -->
+          <div class="flex flex-wrap gap-1 mt-2">
+            @for (c of popularCrops.slice(0,4); track c) {
+              <button
+                (click)="crop = c"
+                class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded border border-green-200">
+                {{ c }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Market Input -->
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">
+            Market Name
+          </label>
+          <input
+            type="text"
+            [(ngModel)]="market"
+            placeholder="e.g. Perumbavoor APMC"
+            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500"
+          />
+        </div>
+
+        <!-- Target Price -->
+        <div>
+          <label class="block text-gray-700 font-medium mb-2">
+            Target Price (₹)
+          </label>
+          <input
+            type="number"
+            [(ngModel)]="targetPrice"
+            placeholder="e.g. 5000"
+            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-green-500"
+          />
+        </div>
+
+      </div>
+
+      <button
+        (click)="onCreateAlert()"
+        [disabled]="isCreating"
+        class="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50">
+        {{ isCreating ? 'Creating...' : '+ Set Alert' }}
+      </button>
+    </div>
+
+    <!-- My Alerts List -->
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-4">
+        My Active Alerts
+      </h2>
+
+      <!-- Loading -->
+      @if (isLoading) {
+        <div class="text-center py-8">
+          <div class="text-3xl mb-2">⏳</div>
+          <p class="text-gray-500">Loading alerts...</p>
+        </div>
+      }
+
+      <!-- Alerts List -->
+      @if (!isLoading && myAlerts.length > 0) {
+        <div class="space-y-3">
+          @for (alert of myAlerts; track alert._id) {
+            <div class="border border-gray-200 rounded-xl p-4 flex justify-between items-center">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="font-bold text-gray-800">{{ alert.crop }}</span>
+                  <span class="text-gray-400">→</span>
+                  <span class="text-gray-600">{{ alert.market }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-gray-500">Alert when price reaches</span>
+                  <span class="font-bold text-green-700">₹{{ alert.targetPrice }}</span>
+                  @if (alert.isTriggered) {
+                    <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full">
+                      🔔 Triggered
+                    </span>
+                  } @else {
+                    <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">
+                      ✅ Active
+                    </span>
+                  }
+                </div>
+              </div>
+              <button
+                (click)="onDeleteAlert(alert._id)"
+                class="text-red-500 hover:text-red-700 text-sm font-medium">
+                Delete
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- No Alerts -->
+      @if (!isLoading && myAlerts.length === 0) {
+        <div class="text-center py-10">
+          <div class="text-4xl mb-3">🔕</div>
+          <p class="text-gray-600 font-medium">No alerts set yet</p>
+          <p class="text-gray-400 text-sm mt-1">
+            Set a price alert above to get notified
+          </p>
+        </div>
+      }
+
+    </div>
+
+  </div>
+</div>
